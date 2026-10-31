@@ -1,34 +1,50 @@
 # orchestrator.py
 
 from agents.viral_scout import viral_scout
+from agents.idea_generator import idea_generator
+from agents.script_writer import script_writer
+import re
 
 
-def run_pipeline(channel: str):
-    """
-    Simple Orchestrator
-    This is the manager that calls the agents one by one.
-    """
+def extract_top_idea(ideas_text: str):
+    try:
+        title = re.search(r'"title":\s*"([^"]+)"', ideas_text)
+        concept = re.search(r'"concept":\s*"([^"]+)"', ideas_text)
+        edge = re.search(r'"edge_of_overstimulation_scene":\s*"([^"]+)"', ideas_text)
 
+        return {
+            "title": title.group(1) if title else "Alphabet Adventure",
+            "concept": concept.group(1) if concept else "A fun letter adventure",
+            "edge_of_overstimulation_scene": edge.group(1)
+            if edge
+            else "Bright exciting moment",
+        }
+    except:
+        return {
+            "title": "Alphabet Adventure: The Lost Letter",
+            "concept": "A friendly animal looks for a missing letter",
+            "edge_of_overstimulation_scene": "Bright colourful moment when the letter is found",
+        }
+
+
+def run_pipeline(channel: str = "kids"):
     print("\n" + "=" * 50)
     print("YOUTUBE FACTORY ORCHESTRATOR")
-    print("Channels: Little Letter Lane | Ledger & Code")
     print("=" * 50 + "\n")
 
-    print(f"Starting pipeline for channel: {channel}\n")
+    print("Step 1: Viral Scout...")
+    scout = viral_scout(channel)
 
-    # Step 1: Call Viral Scout
-    print("Step 1: Calling Viral Scout Agent...")
-    scout_result = viral_scout(channel=channel)
+    print("Step 2: Idea Generator...")
+    ideas = idea_generator(channel, scout)
 
-    # Later we will add more agents here:
-    # idea_generator(scout_result)
-    # script_writer(...)
-    # etc.
+    print("Step 3: Script Writer...")
+    top_idea = extract_top_idea(ideas)
+    print(f"Selected: {top_idea['title']}")
+    script_writer(channel, top_idea)
 
-    print("Pipeline finished (only Scout is connected for now).")
-    print("Next agents will be added one by one.\n")
+    print("\nPipeline complete (Scout → Ideas → Script)")
 
 
 if __name__ == "__main__":
-    # Change to "finance" if you want to test the other channel
-    run_pipeline(channel="kids")
+    run_pipeline("kids")
